@@ -68,3 +68,35 @@ def get_all_applications(db_path=DEFAULT_DB):
     rows = conn.execute("SELECT * FROM applications ORDER BY id").fetchall()
     conn.close()
     return [_row_to_application(row) for row in rows]
+
+def get_application(app_id, db_path=DEFAULT_DB):
+    conn = get_connection(db_path)
+    row = conn.execute(
+        "SELECT * FROM applications WHERE id = ?", (app_id,)
+    ).fetchone()
+    conn.close()
+    if row is None:
+        return None
+    return _row_to_application(row)
+
+def update_status(app_id, new_status, db_path=DEFAULT_DB):
+    conn = get_connection(db_path)
+    cursor = conn.execute(
+        "UPDATE applications SET status = ? WHERE id = ?",
+        (new_status.value, app_id),   
+    )
+    conn.commit()
+    updated = cursor.rowcount > 0
+    conn.close()
+    return updated
+
+def delete_application(app_id, db_path=DEFAULT_DB):
+    conn = get_connection(db_path)
+    cursor = conn.execute(
+        "DELETE FROM applications WHERE id = ?",
+        (app_id,),
+    )
+    conn.commit()
+    deleted = cursor.rowcount > 0
+    conn.close()
+    return deleted
