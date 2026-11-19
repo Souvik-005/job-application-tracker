@@ -63,9 +63,15 @@ def _row_to_application(row):
         date_applied=row["date_applied"],
     )
 
-def get_all_applications(db_path=DEFAULT_DB):
+def get_all_applications(status=None, db_path=DEFAULT_DB):
     conn = get_connection(db_path)
-    rows = conn.execute("SELECT * FROM applications ORDER BY id").fetchall()
+    if status is None:
+        rows = conn.execute("SELECT * FROM applications ORDER BY id").fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT * FROM applications WHERE status = ? ORDER BY id",
+            (status.value,),
+        ).fetchall()
     conn.close()
     return [_row_to_application(row) for row in rows]
 
@@ -100,3 +106,18 @@ def delete_application(app_id, db_path=DEFAULT_DB):
     deleted = cursor.rowcount > 0
     conn.close()
     return deleted
+
+def get_due_followups(today, db_path=DEFAULT_DB):
+    conn = get_connection(db_path)
+    rows = conn.execute(
+        """
+        SELECT * FROM applications
+        WHERE follow_up_date IS NOT NULL
+          AND follow_up_date <= ?
+          AND status IN ('applied', 'interview')
+        ORDER BY follow_up_date
+        """,
+        (today,),
+    ).fetchall()
+    conn.close()
+    return [_row_to_application(row) for row in rows]
