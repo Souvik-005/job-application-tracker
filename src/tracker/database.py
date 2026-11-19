@@ -1,3 +1,4 @@
+import csv
 import sqlite3
 from .models import Application, Status
 
@@ -121,3 +122,28 @@ def get_due_followups(today, db_path=DEFAULT_DB):
     ).fetchall()
     conn.close()
     return [_row_to_application(row) for row in rows]
+
+FIELDS = [
+    "id", "company", "title", "status", "job_url",
+    "contact", "notes", "follow_up_date", "date_applied",
+]
+
+
+def export_to_csv(path, db_path=DEFAULT_DB):
+    applications = get_all_applications(db_path=db_path)
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=FIELDS)
+        writer.writeheader()
+        for a in applications:
+            writer.writerow({
+                "id": a.id,
+                "company": a.company,
+                "title": a.title,
+                "status": a.status.value,
+                "job_url": a.job_url,
+                "contact": a.contact,
+                "notes": a.notes,
+                "follow_up_date": a.follow_up_date,
+                "date_applied": a.date_applied,
+            })
+    return len(applications)

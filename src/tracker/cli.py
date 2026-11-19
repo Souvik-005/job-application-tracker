@@ -8,6 +8,7 @@ from .database import (
     update_status,
     delete_application,
     get_due_followups,
+    export_to_csv,
 )
 from .models import Application, Status
 
@@ -34,6 +35,9 @@ def build_parser():
     delete_p.add_argument("id", type=int)
 
     subparsers.add_parser("due", help="Show follow-ups due today or earlier")
+
+    export_p = subparsers.add_parser("export", help="Export applications to CSV")
+    export_p.add_argument("path")
 
     return parser
 
@@ -79,3 +83,7 @@ def main():
             print("Nothing due.")
         for a in applications:
             print(f"#{a.id}  {a.company} - {a.title}  (follow up: {a.follow_up_date})")
+    
+    elif args.command == "export":
+        count = export_to_csv(args.path)
+        print(f"Exported {count} applications to {args.path}")

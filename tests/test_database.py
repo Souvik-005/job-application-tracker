@@ -8,6 +8,7 @@ from src.tracker.database import (
     update_status,
     delete_application,
     get_due_followups,
+    export_to_csv,
 )
 from src.tracker.models import Application, Status
 
@@ -63,3 +64,11 @@ def test_due_followups(db):
     add_application(Application("Meta", "Dev"), db)
     result = get_due_followups("2026-11-19", db)
     assert [a.company for a in result] == ["Google"]
+
+def test_export_to_csv(db, tmp_path):
+    add_application(Application("Google", "Dev"), db)
+    out = tmp_path / "out.csv"
+    assert export_to_csv(str(out), db) == 1
+    text = out.read_text(encoding="utf-8")
+    assert "Google" in text
+    assert text.startswith("id,company")
